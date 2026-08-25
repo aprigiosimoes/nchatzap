@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# wa-chat: menu interativo pra escolher uma conversa do WhatsApp e responder
+# Uso: wa-chat [limite]   (limite = quantas conversas mostrar se não houver não-lidas; default 15)
+#
+# Espera rodar como o usuário que já pareou o wacli (normalmente chamado
+# via: sudo -u <usuario-de-servico> wa-chat)
+set -euo pipefail
+
+WACLI_BIN="${WACLI_BIN:-wacli}"
+LIMIT="${1:-15}"
+
+echo "Buscando conversas com mensagens não lidas..."
+raw="$("$WACLI_BIN" chats list --unread --json --limit 30)"
+count="$(echo "$raw" | jq '.data | length')"
+
+if [[ "$count" -eq 0 ]]; then
+  echo "Nenhuma não lida. Mostrando as $LIMIT conversas mais recentes:"
+  raw="$("$WACLI_BIN" chats list --json --limit "$LIMIT")"
+fi
+
+mapfile -t names < <(echo "$raw" | jq -r '.data[] | select(.kind != "newsletter") | (.name // .jid) + (if .unread_count > 0 then "  [" + (.unread_count|tostring) + " não lida(s)]" else "" end)')
+mapfile -t jids  < <(echo "$raw" | jq -r '.data[] | select(.kind != "newsletter") | .jid')
+
+if [[ ${#names[@]} -eq 0 ]]; then
+  echo "Nenhuma conversa encontrada."
+  exit 0
+fi
+
+PS3=$'\nEscolha uma conversa (número), ou Ctrl+C pra sair: '
+select nome in "${names[@]}"; do
+  if [[ -z "${nome:-}" ]]; then
+    echo "Opção inválida."
+    continue
+  fi
+  jid="${jids[$((REPLY-1))]}"
+
+  echo
+  echo "===== Últimas mensagens ====="
+  "$WACLI_BIN" messages list --chat "$jid" --limit 10
+  echo "=============================="
+  echo
+
+  read -rp "Mensagem (Enter vazio cancela): " msg
+  if [[ -n "$msg" ]]; then
+    "$WACLI_BIN" send text --to "$jid" --message "$msg"
+    echo "Enviado."
+  else
+    echo "Cancelado."
+  fi
+  break
+done
