@@ -106,6 +106,28 @@ Lista completa: `nchat --help`.
 
 O arquivo `~/.config/nchat/key.conf` é **regravado com os valores padrão a cada vez que o `nchat` inicia** nesta versão — qualquer customização manual desse arquivo é perdida no próximo lançamento. Por isso, **use os atalhos padrão** (`Tab`/`Shift-Tab` pra navegar a lista) em vez de tentar remapear pra setas. Já `~/.config/nchat/ui.conf` (ex: `list_width`) **persiste normalmente** entre execuções.
 
+## Atualizar o nchat
+
+O WhatsApp muda o protocolo com frequência, e o `nchat` acompanha atualizando a biblioteca whatsmeow. **Use a versão 5.21.13 ou mais nova** (`nchat --version`). Builds antigos podem conectar normalmente mas parar de receber as confirmações de entrega/leitura (✓✓) em conversas 1:1 — principalmente com contatos que o WhatsApp já migrou pro formato de ID `@lid` (aparece no `~/.config/nchat/log.txt`).
+
+Pra atualizar (feche o `nchat` antes):
+
+```bash
+# backup (opcional, mas recomendado)
+sudo mkdir -p /usr/local/nchat-backup
+sudo cp -a /usr/local/bin/nchat /usr/local/lib/lib{wmchat,duchat,ncutil}.so /usr/local/nchat-backup/
+
+# recompila a partir do upstream
+git clone --depth 1 https://github.com/d99kris/nchat /tmp/nchat
+mkdir -p /tmp/nchat/build && cd /tmp/nchat/build
+cmake -DHAS_TELEGRAM=OFF -DHAS_SIGNAL=OFF -DHAS_TESTS=OFF ..
+GOTOOLCHAIN=auto make -j"$(nproc)"
+sudo make install && sudo ldconfig
+nchat --version
+```
+
+Login, conversas e configurações são mantidos (ficam em `~/.config/nchat`). Pra voltar à versão anterior, copie os arquivos do backup de volta pros mesmos lugares e rode `sudo ldconfig`.
+
 ## Estrutura deste repositório
 
 ```

@@ -1,5 +1,11 @@
 # Release Notes — nchatzap
 
+## v1.0.1
+
+### Documentação
+- **Use o nchat 5.21.13 ou mais novo.** Builds antigos (ex.: 5.19.5, de 23/08/2026) trazem uma versão antiga da biblioteca whatsmeow e podem deixar de receber as confirmações de entrega/leitura em conversas 1:1 depois que o WhatsApp passa o contato pro formato de ID `@lid`. O nchat 5.21.13 traz o whatsmeow de 16/11/2026.
+- README: nova seção "Atualizar o nchat", com instruções pra recompilar a partir do upstream, fazer backup e voltar à versão anterior.
+
 ## v1.0.0
 
 Primeira versão do kit.
